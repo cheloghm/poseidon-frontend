@@ -7,8 +7,8 @@ import Dashboard from '../views/Dashboard.vue';
 import PassengerList from '../views/UserManagement/PassengerList.vue';
 import AddPassenger from '../views/UserManagement/AddPassenger.vue';
 import EditPassenger from '../views/UserManagement/EditPassenger.vue';
-import EditUser from '../views/UserManagement/EditUser.vue'; // Import EditUser component
-import Statistics from '../views/Statistics.vue'; // Import Statistics component
+import EditUser from '../views/UserManagement/EditUser.vue';
+import Statistics from '../views/Statistics.vue';
 import store from '../store';
 
 const routes = [
@@ -55,7 +55,7 @@ const routes = [
     path: '/edit-user/:id',
     name: 'EditUser',
     component: EditUser,
-    meta: { requiresAuth: true, roles: ['Admin'] }, // Only Admin can edit users
+    meta: { requiresAuth: true, roles: ['Admin'] },
     props: true,
   },
   {
@@ -75,7 +75,7 @@ const router = createRouter({
 // Navigation guard to protect routes that require authentication
 router.beforeEach((to, from, next) => {
   const isAuthenticated = store.getters.isAuthenticated;
-  const userRole = store.state.user?.role; // Assuming user object has a 'role' property
+  const userRole = store.state.user?.role;
 
   if (to.meta.requiresAuth) {
     if (!isAuthenticated) {

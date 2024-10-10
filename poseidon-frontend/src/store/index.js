@@ -9,18 +9,24 @@ export default createStore({
     token: localStorage.getItem('token') || '',
     passengers: [],
     currentPage: 1,
-    totalPages: 10,
-    statistics: {},
-    // ... other state properties
-    users: [],
-    // Pagination state for users
-    userCurrentPage: 1,
-    userTotalPages: 1,
-    survivors: [],
-    classPassengers: [],
-    genderPassengers: [],
-    ageRangePassengers: [],
-    fareRangePassengers: [],
+    totalPages: 1,
+    // Statistics
+    statistics: {
+        totalPassengers: 0,
+        survivalRate: 0,
+        numberOfMen: 0,
+        numberOfWomen: 0,
+        numberOfBoys: 0,
+        numberOfGirls: 0,
+        numberOfAdults: 0,
+        numberOfChildren: 0,
+        class1Count: 0,
+        class2Count: 0,
+        class3Count: 0,
+      },
+    // Filters
+    filterType: '',
+    filterValue: {},
   },
   mutations: {
     SET_USER(state, payload) {
@@ -33,10 +39,10 @@ export default createStore({
       state.token = '';
     },
 
-    SET_PASSENGERS(state, passengers) {
-      state.passengers = passengers.data;
-      state.currentPage = passengers.currentPage;
-      state.totalPages = passengers.totalPages;
+    SET_PASSENGERS(state, payload) {
+      state.passengers = payload.passengers;
+      state.currentPage = payload.currentPage;
+      state.totalPages = payload.totalPages;
     },
 
     ADD_PASSENGER(state, passenger) {
@@ -55,67 +61,89 @@ export default createStore({
     },
 
     SET_STATISTICS(state, stats) {
-      state.statistics = stats;
+      state.statistics = { ...state.statistics, ...stats };
     },
 
-    // Updated SET_USERS mutation with pagination data
-    SET_USERS(state, users) {
-      state.users = users.data;
-      state.userCurrentPage = users.currentPage;
-      state.userTotalPages = users.totalPages;
+    SET_FILTER(state, { type, value }) {
+      state.filterType = type;
+      state.filterValue = value;
     },
 
-    // Added REMOVE_USER mutation
-    REMOVE_USER(state, userId) {
-      state.users = state.users.filter(u => u.id !== userId);
+    CLEAR_FILTER(state) {
+      state.filterType = '';
+      state.filterValue = {};
     },
-
-    SET_SURVIVORS(state, payload) {
-        state.survivors = payload.passengers;
-        state.currentPage = payload.currentPage;
-        state.totalPages = payload.totalPages;
-      },
-  
-      SET_CLASS_PASSENGERS(state, payload) {
-        state.classPassengers = payload.passengers;
-        state.currentPage = payload.currentPage;
-        state.totalPages = payload.totalPages;
-      },
-  
-      SET_GENDER_PASSENGERS(state, payload) {
-        state.genderPassengers = payload.passengers;
-        state.currentPage = payload.currentPage;
-        state.totalPages = payload.totalPages;
-      },
-  
-      SET_AGE_RANGE_PASSENGERS(state, payload) {
-        state.ageRangePassengers = payload.passengers;
-        state.currentPage = payload.currentPage;
-        state.totalPages = payload.totalPages;
-      },
-  
-      SET_FARE_RANGE_PASSENGERS(state, payload) {
-        state.fareRangePassengers = payload.passengers;
-        state.currentPage = payload.currentPage;
-        state.totalPages = payload.totalPages;
-      },
-
-    // ... other mutations
   },
   actions: {
-    // ... existing actions
-
-    async fetchPassengers({ commit }, { page = 1, pageSize = 10 }) {
+    // User Actions
+    async registerUser({ commit }, userData) {
       try {
-        const response = await api.get('/Passenger/all', {
-          params: { page, pageSize },
-        });
-        commit('SET_PASSENGERS', response.data);
+        const response = await api.post('/User/register', userData);
+        return response.data;
       } catch (error) {
-        console.error('Failed to fetch passengers:', error);
+        console.error('Failed to register user:', error);
         throw error;
       }
     },
+
+    async loginUser({ commit }, credentials) {
+      try {
+        const response = await api.post('/User/login', credentials);
+        const token = response.data.token;
+        const user = response.data.user;
+
+        localStorage.setItem('token', token);
+
+        commit('SET_USER', { user, token });
+
+        return response.data;
+      } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
+      }
+    },
+
+    logout({ commit }) {
+      commit('CLEAR_USER');
+      localStorage.removeItem('token');
+    },
+
+    // In fetchPassengers action
+async fetchPassengers({ commit }, { page = 1, pageSize = 10 }) {
+    try {
+      const response = await api.get('/Passenger/all', {
+        params: { page, pageSize },
+      });
+      console.log('Response data:', response.data);
+      commit('SET_PASSENGERS', {
+        passengers: response.data.items, // Adjusted based on actual response
+        currentPage: response.data.currentPage,
+        totalPages: response.data.totalPages,
+      });
+    } catch (error) {
+      console.error('Failed to fetch passengers:', error);
+      commit('SET_PASSENGERS', { passengers: [], currentPage: 1, totalPages: 1 });
+      throw error;
+    }
+  },
+  
+  // In applyFilter action
+  async applyFilter({ commit }, { filterType, filterValue, page = 1, pageSize = 10 }) {
+    try {
+      // ... (existing code)
+      const response = await api.get(endpoint, { params });
+      console.log('Response data:', response.data);
+      commit('SET_PASSENGERS', {
+        passengers: response.data.items, // Adjusted based on actual response
+        currentPage: response.data.currentPage,
+        totalPages: response.data.totalPages,
+      });
+    } catch (error) {
+      console.error('Failed to apply filter:', error);
+      commit('SET_PASSENGERS', { passengers: [], currentPage: 1, totalPages: 1 });
+      throw error;
+    }
+  },  
 
     async deletePassenger({ commit }, passengerId) {
       try {
@@ -127,234 +155,106 @@ export default createStore({
       }
     },
 
-    // Statistics Actions
-    async fetchTotalPassengers({ commit }) {
-      try {
-        const response = await api.get('/Statistics/total-passengers');
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch total passengers:', error);
-        throw error;
-      }
-    },
+    // In actions
+async fetchStatistics({ commit }) {
+    try {
+      const [
+        totalResp,
+        survivalResp,
+        menResp,
+        womenResp,
+        boysResp,
+        girlsResp,
+        adultsResp,
+        childrenResp,
+        class1Resp,
+        class2Resp,
+        class3Resp,
+      ] = await Promise.all([
+        api.get('/Statistics/total-passengers'),
+        api.get('/Passenger/survival-rate'),
+        api.get('/Statistics/men'),
+        api.get('/Statistics/women'),
+        api.get('/Statistics/boys'),
+        api.get('/Statistics/girls'),
+        api.get('/Statistics/adults'),
+        api.get('/Statistics/children'),
+        api.get('/Statistics/class/1/count'),
+        api.get('/Statistics/class/2/count'),
+        api.get('/Statistics/class/3/count'),
+      ]);
+  
+      commit('SET_STATISTICS', {
+        totalPassengers: totalResp.data.totalPassengers,
+        survivalRate: survivalResp.data.survivalRate,
+        numberOfMen: menResp.data.numberOfMen,
+        numberOfWomen: womenResp.data.numberOfWomen,
+        numberOfBoys: boysResp.data.numberOfBoys,
+        numberOfGirls: girlsResp.data.numberOfGirls,
+        numberOfAdults: adultsResp.data.numberOfAdults,
+        numberOfChildren: childrenResp.data.numberOfChildren,
+        class1Count: class1Resp.data.numberOfPassengers,
+        class2Count: class2Resp.data.numberOfPassengers,
+        class3Count: class3Resp.data.numberOfPassengers,
+      });
+    } catch (error) {
+      console.error('Failed to fetch statistics:', error);
+    }
+  },  
 
-    async fetchSurvivalRate({ commit }) {
+    // Filtering Actions
+    async applyFilter({ commit }, { filterType, filterValue, page = 1, pageSize = 10 }) {
       try {
-        const response = await api.get('/Passenger/survival-rate');
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch survival rate:', error);
-        throw error;
-      }
-    },
+        let endpoint = '/Passenger/all';
+        let params = { page, pageSize };
 
-    async fetchNumberOfMen({ commit }) {
-      try {
-        const response = await api.get('/Statistics/men');
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch number of men:', error);
-        throw error;
-      }
-    },
+        switch (filterType) {
+          case 'survivors':
+            endpoint = '/Passenger/survivors';
+            break;
+          case 'class':
+            endpoint = `/Passenger/class/${filterValue.classNumber}`;
+            break;
+          case 'gender':
+            endpoint = `/Passenger/gender/${filterValue.sex}`;
+            break;
+          case 'ageRange':
+            endpoint = '/Passenger/age-range';
+            params.minAge = filterValue.minAge;
+            params.maxAge = filterValue.maxAge;
+            break;
+          case 'fareRange':
+            endpoint = '/Passenger/fare-range';
+            params.minFare = filterValue.minFare;
+            params.maxFare = filterValue.maxFare;
+            break;
+          case 'search':
+            endpoint = '/Passenger/search';
+            params = { ...filterValue, page, pageSize };
+            break;
+          default:
+            endpoint = '/Passenger/all';
+            break;
+        }
 
-    async fetchNumberOfWomen({ commit }) {
-      try {
-        const response = await api.get('/Statistics/women');
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch number of women:', error);
-        throw error;
-      }
-    },
+        const response = await api.get(endpoint, { params });
 
-    async fetchNumberOfBoys({ commit }) {
-      try {
-        const response = await api.get('/Statistics/boys');
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch number of boys:', error);
-        throw error;
-      }
-    },
-
-    async fetchNumberOfGirls({ commit }) {
-      try {
-        const response = await api.get('/Statistics/girls');
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch number of girls:', error);
-        throw error;
-      }
-    },
-
-    async fetchNumberOfAdults({ commit }) {
-      try {
-        const response = await api.get('/Statistics/adults');
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch number of adults:', error);
-        throw error;
-      }
-    },
-
-    async fetchNumberOfChildren({ commit }) {
-      try {
-        const response = await api.get('/Statistics/children');
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch number of children:', error);
-        throw error;
-      }
-    },
-
-    // User Actions
-    async fetchUserById({ commit }, userId) {
-      try {
-        const response = await api.get(`/User/${userId}`);
-        return response.data;
-      } catch (error) {
-        console.error('Failed to fetch user by ID:', error);
-        throw error;
-      }
-    },
-
-    async updateUser({ commit }, { id, userData }) {
-      try {
-        await api.put(`/User/${id}`, userData);
-        // Optionally, fetch the updated user or update state accordingly
-      } catch (error) {
-        console.error('Failed to update user:', error);
-        throw error;
-      }
-    },
-
-    async fetchUsers({ commit }, { page = 1, pageSize = 10 }) {
-      try {
-        const response = await api.get('/User/all', {
-          params: { page, pageSize },
+        commit('SET_PASSENGERS', {
+            passengers: response.data.items,
+          currentPage: response.data.currentPage,
+          totalPages: response.data.totalPages,
         });
-        commit('SET_USERS', response.data);
       } catch (error) {
-        console.error('Failed to fetch users:', error);
+        console.error('Failed to apply filter:', error);
+        commit('SET_PASSENGERS', { passengers: [], currentPage: 1, totalPages: 1 });
         throw error;
       }
     },
 
-    // Added deleteUser action
-    async deleteUser({ commit }, userId) {
-      try {
-        await api.delete(`/User/${userId}`);
-        commit('REMOVE_USER', userId);
-      } catch (error) {
-        console.error('Failed to delete user:', error);
-        throw error;
-      }
+    async resetFilter({ commit, dispatch }) {
+      commit('CLEAR_FILTER');
+      dispatch('fetchPassengers', { page: 1, pageSize: 10 });
     },
-
-     // Fetch Survivors
-     async fetchSurvivors({ commit }, { page = 1, pageSize = 10 }) {
-        try {
-          const response = await api.get('/Passenger/survivors', {
-            params: { page, pageSize },
-          });
-          commit('SET_SURVIVORS', {
-            passengers: response.data.passengers,
-            currentPage: response.data.currentPage,
-            totalPages: response.data.totalPages,
-          });
-        } catch (error) {
-          console.error('Failed to fetch survivors:', error);
-          throw error;
-        }
-      },
-  
-      // Fetch Passengers by Class
-      async fetchPassengersByClass({ commit }, { classNumber, page = 1, pageSize = 10 }) {
-        try {
-          const response = await api.get(`/Passenger/class/${classNumber}`, {
-            params: { page, pageSize },
-          });
-          commit('SET_CLASS_PASSENGERS', {
-            passengers: response.data.passengers,
-            currentPage: response.data.currentPage,
-            totalPages: response.data.totalPages,
-          });
-        } catch (error) {
-          console.error(`Failed to fetch passengers of class ${classNumber}:`, error);
-          throw error;
-        }
-      },
-  
-      // Fetch Passengers by Gender
-      async fetchPassengersByGender({ commit }, { sex, page = 1, pageSize = 10 }) {
-        try {
-          const response = await api.get(`/Passenger/gender/${sex}`, {
-            params: { page, pageSize },
-          });
-          commit('SET_GENDER_PASSENGERS', {
-            passengers: response.data.passengers,
-            currentPage: response.data.currentPage,
-            totalPages: response.data.totalPages,
-          });
-        } catch (error) {
-          console.error(`Failed to fetch passengers with gender ${sex}:`, error);
-          throw error;
-        }
-      },
-  
-      // Fetch Passengers by Age Range
-      async fetchPassengersByAgeRange({ commit }, { minAge, maxAge, page = 1, pageSize = 10 }) {
-        try {
-          const response = await api.get('/Passenger/age-range', {
-            params: { minAge, maxAge, page, pageSize },
-          });
-          commit('SET_AGE_RANGE_PASSENGERS', {
-            passengers: response.data.passengers,
-            currentPage: response.data.currentPage,
-            totalPages: response.data.totalPages,
-          });
-        } catch (error) {
-          console.error('Failed to fetch passengers by age range:', error);
-          throw error;
-        }
-      },
-  
-      // Fetch Passengers by Fare Range
-      async fetchPassengersByFareRange({ commit }, { minFare, maxFare, page = 1, pageSize = 10 }) {
-        try {
-          const response = await api.get('/Passenger/fare-range', {
-            params: { minFare, maxFare, page, pageSize },
-          });
-          commit('SET_FARE_RANGE_PASSENGERS', {
-            passengers: response.data.passengers,
-            currentPage: response.data.currentPage,
-            totalPages: response.data.totalPages,
-          });
-        } catch (error) {
-          console.error('Failed to fetch passengers by fare range:', error);
-          throw error;
-        }
-      },
-  
-      // Search Passengers
-      async searchPassengers({ commit }, { searchCriteria, page = 1, pageSize = 10 }) {
-        try {
-          const response = await api.get('/Passenger/search', {
-            params: { ...searchCriteria, page, pageSize },
-          });
-          commit('SET_PASSENGERS', {
-            passengers: response.data.passengers,
-            currentPage: response.data.currentPage,
-            totalPages: response.data.totalPages,
-          });
-        } catch (error) {
-          console.error('Failed to search passengers:', error);
-          throw error;
-        }
-      },
-
-    // ... other actions
   },
   getters: {
     getUser(state) {
@@ -384,40 +284,5 @@ export default createStore({
     getStatistics(state) {
       return state.statistics;
     },
-
-    // Added getUsers getter
-    getUsers(state) {
-      return state.users;
-    },
-
-    // User pagination getters
-    userCurrentPage(state) {
-      return state.userCurrentPage;
-    },
-
-    userTotalPages(state) {
-      return state.userTotalPages;
-    },
-
-    // Getters for specific passenger lists
-    getSurvivors(state) {
-        return state.survivors;
-      },
-  
-      getClassPassengers(state) {
-        return state.classPassengers;
-      },
-  
-      getGenderPassengers(state) {
-        return state.genderPassengers;
-      },
-  
-      getAgeRangePassengers(state) {
-        return state.ageRangePassengers;
-      },
-  
-      getFareRangePassengers(state) {
-        return state.fareRangePassengers;
-      },
   },
 });
