@@ -5,7 +5,10 @@
  * Adjust the 'apiBaseUrl' according to your backend's URL.
  */
 
+// src/config.js
+
 export default {
-    apiBaseUrl: 'https://localhost:7206/api', // Replace with your backend URL
+    apiBaseUrl: 'https://localhost:7206/api', // Ensure this matches your backend's base URL
   };
+  
   

@@ -1,38 +1,29 @@
 // src/services/api.js
 
-/**
- * Axios instance for making HTTP requests to the Poseidon API backend.
- * Includes default headers and an interceptor to attach JWT tokens.
- */
-
-import axios from 'axios'; // Import Axios library
-import config from '../config'; // Import API configuration
+import axios from 'axios';
+import config from '../config'; // Import API base URL from config.js
 
 // Create an Axios instance with default configurations
 const api = axios.create({
-  baseURL: config.apiBaseUrl, // Base URL for API endpoints
+  baseURL: config.apiBaseUrl, // Set the base URL for all API requests
   headers: {
-    'Content-Type': 'application/json', // Set default content type
+    'Content-Type': 'application/json', // Set content type to JSON
   },
 });
 
-// Add an interceptor to include JWT token in headers if available
+// Add a request interceptor to include the JWT token in headers if available
 api.interceptors.request.use(
   (request) => {
-    // Retrieve token from localStorage
-    const token = localStorage.getItem('token');
-
-    // If token exists, set the Authorization header
+    const token = localStorage.getItem('token'); // Retrieve token from localStorage
     if (token) {
-      request.headers.Authorization = `Bearer ${token}`;
+      request.headers.Authorization = `Bearer ${token}`; // Set Authorization header
     }
-
-    return request; // Continue with the request
+    return request; // Return the modified request
   },
   (error) => {
-    // Handle request error
-    return Promise.reject(error);
+    return Promise.reject(error); // Handle request errors
   }
 );
 
-export default api; // Export the Axios instance for use in other files
+// Export the Axios instance for use in components and store
+export default api;
