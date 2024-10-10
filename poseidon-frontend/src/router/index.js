@@ -33,7 +33,7 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/users',
+    path: '/passengers',
     name: 'PassengerList',
     component: PassengerList,
     meta: { requiresAuth: true },

@@ -1,26 +1,23 @@
-<!-- src/components/common/NavBar.vue -->
+<!-- src/components/NavBar.vue -->
 
 <template>
-    <header class="app-header">
-      <div class="container">
-        <h1>Poseidon API Orchestrator</h1>
-        <nav>
-          <ul>
-            <li><router-link to="/dashboard">Dashboard</router-link></li>
-            <li><router-link to="/users">Passengers</router-link></li>
-            <li v-if="!isAuthenticated"><router-link to="/login">Login</router-link></li>
-            <li v-if="!isAuthenticated"><router-link to="/register">Register</router-link></li>
-            <li v-if="isAuthenticated"><a href="#" @click.prevent="logout">Logout</a></li>
-          </ul>
-        </nav>
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <router-link to="/dashboard">Poseidon API Orchestrator</router-link>
       </div>
-    </header>
+      <ul class="navbar-links">
+        <li><router-link to="/dashboard">Dashboard</router-link></li>
+        <li><router-link to="/passengers">Passengers</router-link></li>
+        <li v-if="isAdmin"><router-link to="/statistics">Statistics</router-link></li>
+        <li><button @click="logout">Logout</button></li>
+      </ul>
+    </nav>
   </template>
   
   <script>
-  import { useStore } from 'vuex'; // Import useStore once
-  import { computed } from 'vue'; // Import computed
-  import { useRouter } from 'vue-router'; // Import useRouter
+  import { computed } from 'vue';
+  import { useStore } from 'vuex';
+  import { useRouter } from 'vue-router';
   
   export default {
     name: 'NavBar',
@@ -28,16 +25,8 @@
       const store = useStore();
       const router = useRouter();
   
-      // Debugging: Log the store to verify it's accessible
-      console.log('Vuex Store:', store);
-  
-      const isAuthenticated = computed(() => {
-        if (!store) {
-          console.error('Vuex store is not available!');
-          return false;
-        }
-        return store.getters.isAuthenticated;
-      });
+      const isAdmin = computed(() => store.state.user?.role === 'Admin');
+      const isAuthenticated = computed(() => store.getters.isAuthenticated);
   
       const logout = () => {
         store.dispatch('logout');
@@ -45,6 +34,7 @@
       };
   
       return {
+        isAdmin,
         isAuthenticated,
         logout,
       };
@@ -55,35 +45,38 @@
   <style scoped>
   /* Styles specific to NavBar component */
   
-  .app-header {
-    background-color: #42b983;
-    padding: 15px 0;
-    color: white;
-  }
-  
-  .container {
+  .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: #42b983;
+    padding: 10px 20px;
   }
   
-  h1 {
-    margin: 0;
+  .navbar-brand a {
+    color: white;
     font-size: 1.5em;
+    text-decoration: none;
   }
   
-  nav ul {
+  .navbar-links {
     list-style: none;
     display: flex;
     gap: 15px;
   }
   
-  nav a {
+  .navbar-links li a,
+  .navbar-links li button {
     color: white;
     text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
   }
   
-  nav a:hover {
+  .navbar-links li button:hover,
+  .navbar-links li a:hover {
     text-decoration: underline;
   }
   </style>

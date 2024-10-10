@@ -62,30 +62,27 @@
   </template>
   
   <script>
-  // Import the Axios instance for making HTTP requests
-  import api from '../../services/api';
-  // Import Vue's ref for reactive data
+  // Import the Vuex store
   import { ref } from 'vue';
-  // Import Vue Router's useRouter for navigation
+  import { useStore } from 'vuex';
   import { useRouter } from 'vue-router';
   
   export default {
     name: 'Register',
     setup() {
-      const router = useRouter(); // Initialize router for navigation
+      const store = useStore();
+      const router = useRouter();
+  
       const credentials = ref({
         username: '',
         email: '',
         password: '',
         confirmPassword: '',
         role: '',
-      }); // Reactive object to store registration data
-      const error = ref(''); // Reactive variable to store error messages
-      const success = ref(''); // Reactive variable to store success messages
+      });
+      const error = ref('');
+      const success = ref('');
   
-      /**
-       * Handles form submission to register a new user.
-       */
       const handleSubmit = async () => {
         // Basic validation: Check if passwords match
         if (credentials.value.password !== credentials.value.confirmPassword) {
@@ -93,7 +90,7 @@
           return;
         }
   
-        // Validate email format using helper function or regex
+        // Validate email format using regex
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(credentials.value.email)) {
           error.value = 'Please enter a valid email address.';
@@ -107,16 +104,15 @@
         }
   
         try {
-          // Make POST request to '/User/register' endpoint with registration data
-          const response = await api.post('/User/register', {
+          // Dispatch the registerUser action
+          await store.dispatch('registerUser', {
             username: credentials.value.username,
             email: credentials.value.email,
             password: credentials.value.password,
             role: credentials.value.role,
           });
-          console.log('Registration successful:', response.data);
           success.value = 'Registration successful! Redirecting to login...';
-          error.value = ''; // Clear any previous errors
+          error.value = '';
   
           // Redirect to login page after a short delay (e.g., 2 seconds)
           setTimeout(() => {
@@ -126,7 +122,7 @@
           console.error('Registration failed:', err);
           // Display error message from backend or a default message
           error.value = err.response?.data?.message || 'Registration failed.';
-          success.value = ''; // Clear any previous success messages
+          success.value = '';
         }
       };
   

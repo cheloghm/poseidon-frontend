@@ -9,13 +9,18 @@ export default createStore({
     token: localStorage.getItem('token') || '',
     passengers: [],
     currentPage: 1,
-    totalPages: 1,
+    totalPages: 10,
     statistics: {},
     // ... other state properties
     users: [],
     // Pagination state for users
     userCurrentPage: 1,
     userTotalPages: 1,
+    survivors: [],
+    classPassengers: [],
+    genderPassengers: [],
+    ageRangePassengers: [],
+    fareRangePassengers: [],
   },
   mutations: {
     SET_USER(state, payload) {
@@ -64,6 +69,36 @@ export default createStore({
     REMOVE_USER(state, userId) {
       state.users = state.users.filter(u => u.id !== userId);
     },
+
+    SET_SURVIVORS(state, payload) {
+        state.survivors = payload.passengers;
+        state.currentPage = payload.currentPage;
+        state.totalPages = payload.totalPages;
+      },
+  
+      SET_CLASS_PASSENGERS(state, payload) {
+        state.classPassengers = payload.passengers;
+        state.currentPage = payload.currentPage;
+        state.totalPages = payload.totalPages;
+      },
+  
+      SET_GENDER_PASSENGERS(state, payload) {
+        state.genderPassengers = payload.passengers;
+        state.currentPage = payload.currentPage;
+        state.totalPages = payload.totalPages;
+      },
+  
+      SET_AGE_RANGE_PASSENGERS(state, payload) {
+        state.ageRangePassengers = payload.passengers;
+        state.currentPage = payload.currentPage;
+        state.totalPages = payload.totalPages;
+      },
+  
+      SET_FARE_RANGE_PASSENGERS(state, payload) {
+        state.fareRangePassengers = payload.passengers;
+        state.currentPage = payload.currentPage;
+        state.totalPages = payload.totalPages;
+      },
 
     // ... other mutations
   },
@@ -217,6 +252,108 @@ export default createStore({
       }
     },
 
+     // Fetch Survivors
+     async fetchSurvivors({ commit }, { page = 1, pageSize = 10 }) {
+        try {
+          const response = await api.get('/Passenger/survivors', {
+            params: { page, pageSize },
+          });
+          commit('SET_SURVIVORS', {
+            passengers: response.data.passengers,
+            currentPage: response.data.currentPage,
+            totalPages: response.data.totalPages,
+          });
+        } catch (error) {
+          console.error('Failed to fetch survivors:', error);
+          throw error;
+        }
+      },
+  
+      // Fetch Passengers by Class
+      async fetchPassengersByClass({ commit }, { classNumber, page = 1, pageSize = 10 }) {
+        try {
+          const response = await api.get(`/Passenger/class/${classNumber}`, {
+            params: { page, pageSize },
+          });
+          commit('SET_CLASS_PASSENGERS', {
+            passengers: response.data.passengers,
+            currentPage: response.data.currentPage,
+            totalPages: response.data.totalPages,
+          });
+        } catch (error) {
+          console.error(`Failed to fetch passengers of class ${classNumber}:`, error);
+          throw error;
+        }
+      },
+  
+      // Fetch Passengers by Gender
+      async fetchPassengersByGender({ commit }, { sex, page = 1, pageSize = 10 }) {
+        try {
+          const response = await api.get(`/Passenger/gender/${sex}`, {
+            params: { page, pageSize },
+          });
+          commit('SET_GENDER_PASSENGERS', {
+            passengers: response.data.passengers,
+            currentPage: response.data.currentPage,
+            totalPages: response.data.totalPages,
+          });
+        } catch (error) {
+          console.error(`Failed to fetch passengers with gender ${sex}:`, error);
+          throw error;
+        }
+      },
+  
+      // Fetch Passengers by Age Range
+      async fetchPassengersByAgeRange({ commit }, { minAge, maxAge, page = 1, pageSize = 10 }) {
+        try {
+          const response = await api.get('/Passenger/age-range', {
+            params: { minAge, maxAge, page, pageSize },
+          });
+          commit('SET_AGE_RANGE_PASSENGERS', {
+            passengers: response.data.passengers,
+            currentPage: response.data.currentPage,
+            totalPages: response.data.totalPages,
+          });
+        } catch (error) {
+          console.error('Failed to fetch passengers by age range:', error);
+          throw error;
+        }
+      },
+  
+      // Fetch Passengers by Fare Range
+      async fetchPassengersByFareRange({ commit }, { minFare, maxFare, page = 1, pageSize = 10 }) {
+        try {
+          const response = await api.get('/Passenger/fare-range', {
+            params: { minFare, maxFare, page, pageSize },
+          });
+          commit('SET_FARE_RANGE_PASSENGERS', {
+            passengers: response.data.passengers,
+            currentPage: response.data.currentPage,
+            totalPages: response.data.totalPages,
+          });
+        } catch (error) {
+          console.error('Failed to fetch passengers by fare range:', error);
+          throw error;
+        }
+      },
+  
+      // Search Passengers
+      async searchPassengers({ commit }, { searchCriteria, page = 1, pageSize = 10 }) {
+        try {
+          const response = await api.get('/Passenger/search', {
+            params: { ...searchCriteria, page, pageSize },
+          });
+          commit('SET_PASSENGERS', {
+            passengers: response.data.passengers,
+            currentPage: response.data.currentPage,
+            totalPages: response.data.totalPages,
+          });
+        } catch (error) {
+          console.error('Failed to search passengers:', error);
+          throw error;
+        }
+      },
+
     // ... other actions
   },
   getters: {
@@ -261,5 +398,26 @@ export default createStore({
     userTotalPages(state) {
       return state.userTotalPages;
     },
+
+    // Getters for specific passenger lists
+    getSurvivors(state) {
+        return state.survivors;
+      },
+  
+      getClassPassengers(state) {
+        return state.classPassengers;
+      },
+  
+      getGenderPassengers(state) {
+        return state.genderPassengers;
+      },
+  
+      getAgeRangePassengers(state) {
+        return state.ageRangePassengers;
+      },
+  
+      getFareRangePassengers(state) {
+        return state.fareRangePassengers;
+      },
   },
 });

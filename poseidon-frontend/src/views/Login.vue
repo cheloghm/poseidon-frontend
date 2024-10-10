@@ -3,6 +3,7 @@
 <template>
     <div class="login-container">
       <h2>Login</h2>
+      <!-- Display error message if any -->
       <div v-if="error" class="error">
         {{ error }}
       </div>
@@ -30,8 +31,8 @@
     </div>
   </template>
   
-  
   <script>
+  // Import the Vuex store
   import { ref } from 'vue';
   import { useStore } from 'vuex';
   import { useRouter } from 'vue-router';
@@ -41,21 +42,28 @@
     setup() {
       const store = useStore();
       const router = useRouter();
+  
       const credentials = ref({
-        email: '', // Changed from 'username' to 'email'
+        email: '',
         password: '',
       });
       const error = ref('');
   
       const handleLogin = async () => {
-        console.log('Attempting to log in with:', credentials.value);
         try {
-          await store.dispatch('login', credentials.value);
-          console.log('Login successful');
+          // Dispatch the loginUser action
+          await store.dispatch('loginUser', {
+            email: credentials.value.email,
+            password: credentials.value.password,
+          });
+          error.value = '';
+  
+          // Redirect to Dashboard after successful login
           router.push('/dashboard');
         } catch (err) {
           console.error('Login failed:', err);
-          error.value = err.response?.data?.message || 'Login failed.';
+          // Display error message from backend or a default message
+          error.value = err.response?.data?.message || 'Login failed. Please check your credentials.';
         }
       };
   
@@ -98,6 +106,7 @@
   }
   
   button {
+    display: block;
     width: 100%;
     padding: 10px;
     background-color: #42b983;
