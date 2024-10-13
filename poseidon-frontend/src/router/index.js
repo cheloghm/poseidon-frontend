@@ -6,8 +6,6 @@ import store from '../store';
 import Home from '../views/Home.vue';
 import Register from '../views/Register.vue';
 import Login from '../views/Login.vue';
-//import Dashboard from '../views/Dashboard.vue';
-//import AdminDashboard from '../views/AdminDashboard.vue';
 import Unauthorized from '../views/Unauthorized.vue';
 import Passengers from '../views/Passengers.vue';
 import Statistics from '../views/Statistics.vue';
@@ -28,18 +26,6 @@ const routes = [
     name: 'Login',
     component: Login,
   },
-//   {
-//     path: '/dashboard',
-//     name: 'Dashboard',
-//     component: Dashboard,
-//     meta: { requiresAuth: true },
-//   },
-//   {
-//     path: '/admin',
-//     name: 'AdminDashboard',
-//     component: AdminDashboard,
-//     meta: { requiresAuth: true, roles: ['Admin'] },
-//   },
   {
     path: '/passengers',
     name: 'Passengers',
