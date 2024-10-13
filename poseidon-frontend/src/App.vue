@@ -1,35 +1,33 @@
 <!-- src/App.vue -->
-
 <template>
   <div id="app">
-    <!-- Include the navigation bar -->
     <NavBar />
-    <!-- Display the current route's component -->
     <router-view />
   </div>
 </template>
 
 <script>
-import NavBar from './components/common/NavBar.vue'; // Import NavBar component
+import NavBar from './components/NavBar.vue';
 
 export default {
   name: 'App',
   components: {
-    NavBar, // Register NavBar component
+    NavBar,
   },
 };
 </script>
 
 <style>
-/* Global styles */
+/* Global Styles */
 body {
-  font-family: Arial, sans-serif;
   margin: 0;
-  padding: 0;
+  font-family: Arial, sans-serif;
   background-color: #f5f5f5;
 }
 
 #app {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 </style>

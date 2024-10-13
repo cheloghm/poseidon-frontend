@@ -1,129 +1,114 @@
 <!-- src/views/Login.vue -->
-
 <template>
-    <div class="login-container">
-      <h2>Login</h2>
-      <!-- Display error message if any -->
-      <div v-if="error" class="error">
-        {{ error }}
+    <div class="auth-page">
+      <div class="auth-container">
+        <h2>Login</h2>
+        <form @submit.prevent="loginUser">
+          <div class="form-group">
+            <label>Email</label>
+            <input v-model="credentials.email" type="email" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input v-model="credentials.password" type="password" required />
+          </div>
+          <button type="submit">Login</button>
+        </form>
+        <p v-if="error" class="error-message">{{ error }}</p>
       </div>
-      <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label for="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            v-model="credentials.email"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            v-model="credentials.password"
-            required
-          />
-        </div>
-        <button type="submit">Login</button>
-      </form>
     </div>
   </template>
   
   <script>
-  import { ref } from 'vue';
-  import { useStore } from 'vuex';
-  import { useRouter } from 'vue-router';
+  import { mapActions } from 'vuex';
   
   export default {
     name: 'Login',
-    setup() {
-      const store = useStore();
-      const router = useRouter();
-  
-      const credentials = ref({
-        email: '',
-        password: '',
-      });
-      const error = ref('');
-  
-      const handleLogin = async () => {
-        try {
-          // Dispatch the loginUser action
-          await store.dispatch('loginUser', {
-            email: credentials.value.email,
-            password: credentials.value.password,
-          });
-          error.value = '';
-  
-          // Redirect to Dashboard after successful login
-          router.push('/dashboard');
-        } catch (err) {
-          console.error('Login failed:', err);
-          // Display error message from backend or a default message
-          error.value = err.response?.data?.message || 'Login failed. Please check your credentials.';
-        }
-      };
-  
+    data() {
       return {
-        credentials,
-        handleLogin,
-        error,
+        credentials: {
+          email: '',
+          password: '',
+        },
+        error: '',
       };
+    },
+    methods: {
+      ...mapActions(['login']),
+      async loginUser() {
+        try {
+          await this.login(this.credentials);
+          this.$router.push('/dashboard');
+        } catch (err) {
+          console.error(err);
+          this.error = err.response?.data || 'Login failed. Please try again.';
+        }
+      },
     },
   };
   </script>
   
   <style scoped>
-  /* Styles specific to Login component */
-  
-  .login-container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
+  .auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 60px);
+    background-color: #f0f2f5;
   }
   
-  h2 {
-    text-align: center;
+  .auth-container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 400px;
+  }
+  
+  .auth-container h2 {
+    margin-top: 0;
     margin-bottom: 20px;
+    color: #333333;
+    text-align: center;
   }
   
   .form-group {
     margin-bottom: 15px;
   }
   
-  label {
+  .form-group label {
     display: block;
     margin-bottom: 5px;
+    color: #555555;
   }
   
-  input {
+  .form-group input {
     width: 100%;
     padding: 8px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
     box-sizing: border-box;
   }
   
   button {
-    display: block;
     width: 100%;
     padding: 10px;
-    background-color: #42b983;
-    color: white;
+    background-color: #007bff;
+    color: #ffffff;
     border: none;
-    cursor: pointer;
     border-radius: 4px;
-    transition: background-color 0.3s ease;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 16px;
   }
   
   button:hover {
-    background-color: #2c8a6e;
+    background-color: #0056b3;
   }
   
-  .error {
+  .error-message {
     color: red;
-    margin-bottom: 15px;
+    margin-top: 10px;
     text-align: center;
   }
   </style>
-  

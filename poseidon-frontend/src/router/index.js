@@ -1,25 +1,22 @@
 // src/router/index.js
-
 import { createRouter, createWebHistory } from 'vue-router';
-import Login from '../views/Login.vue';
-import Register from '../views/UserManagement/Register.vue';
-import Dashboard from '../views/Dashboard.vue';
-import PassengerList from '../views/UserManagement/PassengerList.vue';
-import AddPassenger from '../views/UserManagement/AddPassenger.vue';
-import EditPassenger from '../views/UserManagement/EditPassenger.vue';
-import EditUser from '../views/UserManagement/EditUser.vue';
-import Statistics from '../views/Statistics.vue';
 import store from '../store';
+
+// Import your views
+import Home from '../views/Home.vue';
+import Register from '../views/Register.vue';
+import Login from '../views/Login.vue';
+//import Dashboard from '../views/Dashboard.vue';
+//import AdminDashboard from '../views/AdminDashboard.vue';
+import Unauthorized from '../views/Unauthorized.vue';
+import Passengers from '../views/Passengers.vue';
+import Statistics from '../views/Statistics.vue';
 
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard',
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login,
+    name: 'Home',
+    component: Home,
   },
   {
     path: '/register',
@@ -27,36 +24,27 @@ const routes = [
     component: Register,
   },
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: Dashboard,
-    meta: { requiresAuth: true },
+    path: '/login',
+    name: 'Login',
+    component: Login,
   },
+//   {
+//     path: '/dashboard',
+//     name: 'Dashboard',
+//     component: Dashboard,
+//     meta: { requiresAuth: true },
+//   },
+//   {
+//     path: '/admin',
+//     name: 'AdminDashboard',
+//     component: AdminDashboard,
+//     meta: { requiresAuth: true, roles: ['Admin'] },
+//   },
   {
     path: '/passengers',
-    name: 'PassengerList',
-    component: PassengerList,
+    name: 'Passengers',
+    component: Passengers,
     meta: { requiresAuth: true },
-  },
-  {
-    path: '/add-passenger',
-    name: 'AddPassenger',
-    component: AddPassenger,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/edit-passenger/:id',
-    name: 'EditPassenger',
-    component: EditPassenger,
-    meta: { requiresAuth: true },
-    props: true,
-  },
-  {
-    path: '/edit-user/:id',
-    name: 'EditUser',
-    component: EditUser,
-    meta: { requiresAuth: true, roles: ['Admin'] },
-    props: true,
   },
   {
     path: '/statistics',
@@ -64,28 +52,32 @@ const routes = [
     component: Statistics,
     meta: { requiresAuth: true },
   },
-  // Add more routes as needed
+  {
+    path: '/unauthorized',
+    name: 'Unauthorized',
+    component: Unauthorized,
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/',
+  },
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 });
 
-// Navigation guard to protect routes that require authentication
+// Navigation guard to protect routes
 router.beforeEach((to, from, next) => {
+  const requiresAuth = to.meta.requiresAuth;
   const isAuthenticated = store.getters.isAuthenticated;
-  const userRole = store.state.user?.role;
+  const userRole = store.getters.getUser?.role;
 
-  if (to.meta.requiresAuth) {
-    if (!isAuthenticated) {
-      next('/login');
-    } else if (to.meta.roles && !to.meta.roles.includes(userRole)) {
-      // If route has role restrictions and user does not have the required role
-      next('/dashboard'); // Redirect to dashboard or show an unauthorized page
-    } else {
-      next();
-    }
+  if (requiresAuth && !isAuthenticated) {
+    next('/login');
+  } else if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+    next('/unauthorized');
   } else {
     next();
   }

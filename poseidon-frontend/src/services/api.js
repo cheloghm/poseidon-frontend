@@ -1,27 +1,22 @@
 // src/services/api.js
-
 import axios from 'axios';
-import config from '../config'; // Ensure this points to your config.js with the correct API base URL
+import store from '../store';
+import config from '../config'; // Ensure this file exports apiBaseUrl
 
 const api = axios.create({
-  baseURL: config.apiBaseUrl, // e.g., 'http://localhost:5000/api'
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: config.apiBaseUrl,
 });
 
-// Include JWT token in headers if available
+// Add a request interceptor to include the token in headers
 api.interceptors.request.use(
-  (request) => {
-    const token = localStorage.getItem('token');
+  (requestConfig) => {
+    const token = store.getters.getToken; // Use getter
     if (token) {
-      request.headers.Authorization = `Bearer ${token}`;
+      requestConfig.headers.Authorization = `Bearer ${token}`;
     }
-    return request;
+    return requestConfig;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
