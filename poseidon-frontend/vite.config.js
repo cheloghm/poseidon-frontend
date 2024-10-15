@@ -1,14 +1,21 @@
 // vite.config.js
-
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
-// Export Vite configuration
 export default defineConfig({
-  plugins: [vue()], // Use Vue plugin
+  plugins: [vue()],
   resolve: {
     alias: {
-      '@': '/src', // Create an alias for the src directory
+      '@': '/src',
+    },
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://localhost:7206',
+        changeOrigin: true,
+        secure: false, // Allows self-signed certificates
+      },
     },
   },
 });

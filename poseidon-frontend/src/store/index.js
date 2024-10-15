@@ -5,27 +5,29 @@ import api from '../services/api';
 export default createStore({
   state: {
     user: null,
-    token: null, // Add token to state
+    token: null,
     isAuthenticated: false,
   },
   getters: {
     getUser: (state) => state.user,
     isAuthenticated: (state) => state.isAuthenticated,
-    getToken: (state) => state.token, // Getter for token
+    getToken: (state) => state.token,
   },
   mutations: {
     SET_USER(state, user) {
       state.user = user;
       state.isAuthenticated = true;
     },
-    SET_TOKEN(state, token) { // Mutation to set token
+    SET_TOKEN(state, token) {
       state.token = token;
-    },
+      localStorage.setItem('token', token);
+    },    
     CLEAR_AUTH(state) {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-    },
+      localStorage.removeItem('token');
+    },    
     UPDATE_USER(state, updatedUser) {
       state.user = { ...state.user, ...updatedUser };
     },
@@ -36,9 +38,6 @@ export default createStore({
         const response = await api.post('/User/login', credentials);
         const token = response.data.token;
         commit('SET_TOKEN', token);
-        // Decode token to get user info or fetch user details
-        // Assuming the token contains user info
-        // Alternatively, you might need to call /User/me
         const userResponse = await api.get('/User/me');
         commit('SET_USER', userResponse.data);
       } catch (error) {
@@ -48,11 +47,8 @@ export default createStore({
     async register({ commit }, userData) {
       try {
         const response = await api.post('/User/register', userData);
-        // Assuming registration also returns a token
-        const token = response.data.token;
-        commit('SET_TOKEN', token);
-        const userResponse = await api.get('/User/me');
-        commit('SET_USER', userResponse.data);
+        console.log('Registration successful:', response.data);
+        // Redirect to login handled in the component
       } catch (error) {
         throw error;
       }
@@ -61,7 +57,6 @@ export default createStore({
       try {
         await api.post('/User/logout');
         commit('CLEAR_AUTH');
-        // Optionally, redirect to login
       } catch (error) {
         console.error('Logout failed:', error);
       }
