@@ -84,8 +84,8 @@
               <td>{{ passenger.fare }}</td>
               <td>{{ passenger.survived ? 'Yes' : 'No' }}</td>
               <td v-if="isAdmin">
-                <button @click="editPassenger(passenger)">Edit</button>
-                <button @click="deletePassenger(passenger.id)">Delete</button>
+                <button class="edit-btn" @click="editPassenger(passenger)">Edit</button>
+                <button class="delete-btn" @click="deletePassenger(passenger.id)">Delete</button>
               </td>
             </tr>
           </tbody>
@@ -271,29 +271,30 @@
   }
   
   .sidebar {
-    width: 220px;
-    background-color: #ffffff;
-    border-right: 1px solid #eaeaea;
-    padding: 20px;
-    overflow-y: auto;
-  }
-  
-  .sidebar button {
-    display: block;
-    width: 100%;
-    margin-bottom: 15px;
-    padding: 12px 20px;
-    text-align: left;
-    background-color: #f9f9f9;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .sidebar button:hover {
-    background-color: #eaeaea;
-  }
+  width: 220px;
+  background-color: #ffffff;
+  border-right: 1px solid #eaeaea;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.sidebar button {
+  display: block;
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 12px 20px;
+  text-align: left;
+  background-color: #f9f9f9;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+.sidebar button:hover {
+  background-color: #eaeaea;
+}
   
   .content {
     flex-grow: 1;
@@ -356,6 +357,40 @@
   
   tbody tr:hover {
     background-color: #f9f9f9;
+  }
+
+  .edit-btn,
+.delete-btn {
+  padding: 6px 12px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 14px;
+}
+
+.edit-btn {
+  background-color: #28a745; /* Green */
+  color: #ffffff;
+}
+
+.edit-btn:hover {
+  background-color: #218838;
+}
+
+.delete-btn {
+  background-color: #dc3545; /* Red */
+  color: #ffffff;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.edit-btn,
+  .delete-btn {
+    margin-bottom: 5px;
   }
   
   .pagination {
